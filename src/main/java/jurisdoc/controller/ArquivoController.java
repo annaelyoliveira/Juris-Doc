@@ -39,8 +39,17 @@ public class ArquivoController {
             @PathVariable String id
     ) {
 
-        return ResponseEntity.ok(
-                arquivoService.downloadArquivo(id)
-        );
+        org.springframework.core.io.Resource resource =
+                arquivoService.downloadArquivo(id);
+
+        String filename = resource.getFilename();
+
+        return ResponseEntity.ok()
+                .header(
+                        org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + (filename != null ? filename : "file") + "\""
+                )
+                .contentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM)
+                .body(resource);
     }
 }

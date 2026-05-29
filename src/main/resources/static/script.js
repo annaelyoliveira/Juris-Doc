@@ -1,4 +1,6 @@
 const API = "/processos";
+const UPLOAD_URL = "/arquivos/upload";
+const DOWNLOAD_URL = "/arquivos";
 
 async function criarProcesso() {
 
@@ -11,6 +13,12 @@ async function criarProcesso() {
     const descricao =
         document.getElementById("descricao").value;
 
+    if (!numeroProcesso || !cliente || !descricao) {
+
+        alert("Preencha todos os campos.");
+        return;
+    }
+
     await fetch(API, {
 
         method: "POST",
@@ -20,125 +28,144 @@ async function criarProcesso() {
         },
 
         body: JSON.stringify({
-
             numeroProcesso,
             cliente,
             descricao
-
         })
+
     });
 
     document.getElementById("numeroProcesso").value = "";
     document.getElementById("cliente").value = "";
     document.getElementById("descricao").value = "";
 
-    carregarProcessos();
+    listarProcessos();
 }
 
-async function carregarProcessos() {
+async function listarProcessos() {
 
-    const resposta = await fetch(API);
+    const response = await fetch(API);
 
-    const processos = await resposta.json();
+    const processos = await response.json();
 
-    document.getElementById("totalProcessos")
-        .innerText = processos.length;
+    document.getElementById(
+        "quantidadeProcessos"
+    ).innerText = processos.length;
 
-    const lista =
-        document.getElementById("listaProcessos");
+    const div =
+        document.getElementById("processos");
 
-    lista.innerHTML = "";
+    div.innerHTML = "";
 
     processos.forEach(processo => {
 
-        lista.innerHTML += `
+        div.innerHTML += `
 
         <div class="process-card">
 
-            <h2>
-                ⚖ Processo ${processo.numeroProcesso}
-            </h2>
+            <div class="process-header">
 
-            <p>
-                <strong>Cliente:</strong>
-                ${processo.cliente}
-            </p>
+                <div>
 
-            <p>${processo.descricao}</p>
+                    <div class="process-title">
+                        ⚖️ ${processo.numeroProcesso}
+                    </div>
 
-            <div class="${
-                processo.ativo
-                    ? "status-active"
-                    : "status-archived"
-            }">
+                    <div class="process-info">
+                        Cliente: ${processo.cliente}
+                    </div>
 
-                ${
-                    processo.ativo
-                        ? "🟢 ATIVO"
-                        : "🔴 ARQUIVADO"
-                }
+                </div>
+
+                <div class="
+                    status
+                    ${processo.ativo ? 'ativo' : 'arquivado'}
+                ">
+
+                    ${
+                        processo.ativo
+                        ? 'ATIVO'
+                        : 'ARQUIVADO'
+                    }
+
+                </div>
 
             </div>
 
+            <div class="process-info">
+                ${processo.descricao}
+            </div>
+
             ${
-                processo.ativo
-                    ? `
-                    <div style="margin-top:20px">
-
-                        <button
-                            onclick="arquivarProcesso('${processo.id}')">
-
-                            Arquivar Processo
-
-                        </button>
-
-                    </div>
-                    `
-                    : `
-                    <div class="audit-warning">
-
+                !processo.ativo
+                ?
+                `
+                    <div class="warning">
                         ⚠ Processo arquivado.
                         Histórico preservado para auditoria.
-
                     </div>
-                    `
+                `
+                :
+                ''
             }
 
-            <div class="documents-section">
+            <br>
 
-                <h3>📁 Documentos</h3>
+            ${
+                processo.ativo
+                ?
+                `
+                    <button type="button" onclick="arquivarProcesso('${processo.id}')">
+                        Arquivar Processo
+                    </button>
+                `
+                :
+                `
+                    <button type="button" onclick="restaurarProcesso('${processo.id}')">
+                        Desarquivar Processo
+                    </button>
+                `
+            }
+
+            <div class="documents">
+
+                <div class="documents-top">
+
+                    <h3>📁 Documentos</h3>
+
+                </div>
 
                 ${
                     processo.ativo
-                        ? `
-                        <div class="upload-section">
+                    ?
+                    `
+                        <div class="upload-box">
 
                             <input
                                 type="text"
-                                id="autor-${processo.id}"
+                                id="autor-processo-${processo.id}"
                                 placeholder="Nome do advogado"
                             >
 
                             <input
                                 type="file"
-                                id="arquivo-${processo.id}"
+                                id="novoArquivo-${processo.id}"
                             >
 
-                            <button
-                                onclick="uploadDocumento('${processo.id}')">
-
+                            <button type="button" onclick="uploadDocumento('${processo.id}')">
                                 Enviar Documento
-
                             </button>
 
                         </div>
-                        `
-                        : ""
+                    `
+                    :
+                    ''
                 }
 
                 ${
-                    processo.documentos
-                        ?.map(documento => `
+                    processo.documentos && processo.documentos.length > 0
+                    ?
+                    processo.documentos.map(documento => `
 
                         <div class="document-card">
 
@@ -146,49 +173,16 @@ async function carregarProcessos() {
                                 📄 ${documento.nomeArquivo}
                             </h4>
 
-                            <p>
-                                Tipo:
-                                ${documento.tipo}
-                            </p>
+                            <div class="document-meta">
+                                Tipo: ${documento.tipo}
+                            </div>
 
-                            <p>
+                            <div class="document-meta">
                                 Versão Atual:
                                 ${documento.versaoAtual}
-                            </p>
+                            </div>
 
-                            ${
-                                processo.ativo
-                                    ? `
-                                    <div class="upload-section">
-
-                                        <input
-                                            type="text"
-                                            id="autor-versao-${documento.id}"
-                                            placeholder="Nome do advogado"
-                                        >
-
-                                        <input
-                                            type="file"
-                                            id="nova-versao-${documento.id}"
-                                        >
-
-                                        <button
-                                            onclick="
-                                            novaVersao(
-                                                '${processo.id}',
-                                                '${documento.id}'
-                                            )">
-
-                                            Nova Versão
-
-                                        </button>
-
-                                    </div>
-                                    `
-                                    : ""
-                            }
-
-                            <div class="version-history">
+                            <div class="version-box">
 
                                 <h4>
                                     📜 Histórico de versões
@@ -196,35 +190,82 @@ async function carregarProcessos() {
 
                                 ${
                                     documento.versoes
-                                        ?.map(versao => `
+                                    ?
+                                    documento.versoes.map(v => `
 
-                                        <div class="version-card">
+                                        <div class="version-item">
 
                                             <p>
-                                                ✅ Versão
-                                                ${versao.versao}
+                                                ✅ Versão ${v.versao}
                                             </p>
 
                                             <p>
-                                                👤 ${versao.autor}
+                                                👤 ${v.autor}
                                             </p>
 
                                             <p>
-                                                📝 ${versao.observacao}
+                                                📝 ${v.observacao}
                                             </p>
+
+                                            <a
+                                                class="download-link"
+                                                href="${DOWNLOAD_URL}/${v.gridFsFileId}"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                Baixar versão ${v.versao}
+                                            </a>
 
                                         </div>
 
-                                        `)
-                                        .join("")
+                                    `).join('')
+                                    :
+                                    ''
                                 }
 
                             </div>
 
+                            ${
+                                processo.ativo
+                                ?
+                                `
+                                    <div class="upload-box new-version-box">
+
+                                        <input
+                                            type="text"
+                                            id="autor-versao-${processo.id}-${documento.id}"
+                                            placeholder="Nome do advogado"
+                                        >
+
+                                        <input
+                                            type="file"
+                                            id="novoArquivo-versao-${processo.id}-${documento.id}"
+                                        >
+
+                                        <button type="button" onclick="
+                                            uploadNovaVersao(
+                                                '${processo.id}',
+                                                '${documento.id}'
+                                            )
+                                        ">
+                                            Enviar nova versão
+                                        </button>
+
+                                    </div>
+                                `
+                                :
+                                ''
+                            }
+
                         </div>
 
-                        `)
-                        .join("")
+                    `).join('')
+                    :
+                    `
+                        <div class="document-meta">
+                            Nenhum documento enviado.
+                        </div>
+                    `
                 }
 
             </div>
@@ -233,134 +274,208 @@ async function carregarProcessos() {
 
         `;
     });
+
 }
 
 async function arquivarProcesso(id) {
-
-    await fetch(`${API}/${id}`, {
-
+    const response = await fetch(`${API}/${id}`, {
         method: "DELETE"
     });
 
-    carregarProcessos();
+    if (!response.ok) {
+        const errorText = await response.text();
+        alert(`Erro ao arquivar processo: ${errorText}`);
+        return;
+    }
+
+    listarProcessos();
+}
+
+async function restaurarProcesso(id) {
+    const response = await fetch(`${API}/${id}/restaurar`, {
+        method: "PATCH"
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        alert(`Erro ao desarquivar processo: ${errorText}`);
+        return;
+    }
+
+    listarProcessos();
 }
 
 async function uploadDocumento(processoId) {
 
-    const arquivo =
-        document.getElementById(`arquivo-${processoId}`)
-            .files[0];
+    const arquivoInput = document.getElementById(
+        `novoArquivo-${processoId}`
+    );
 
-    const autor =
-        document.getElementById(`autor-${processoId}`)
-            .value;
+    const autorInput = document.getElementById(
+        `autor-processo-${processoId}`
+    );
 
-    if (!arquivo) return;
+    if (!arquivoInput || !autorInput) {
+        alert(
+            "Erro interno: os campos de upload não foram encontrados. Recarregue a página e tente novamente."
+        );
+        console.error(
+            "uploadDocumento element missing",
+            { processoId, arquivoInput, autorInput }
+        );
+        return;
+    }
 
-    const formData = new FormData();
+    const arquivo = arquivoInput.files[0];
+    const autor = autorInput.value;
 
-    formData.append("arquivo", arquivo);
+    if (!arquivo) {
 
-    const upload = await fetch("/arquivos/upload", {
+        alert("Selecione um arquivo");
+        return;
+    }
 
-        method: "POST",
+    if (!autor) {
 
-        body: formData
-    });
+        alert("Digite o nome do advogado");
+        return;
+    }
 
-    const gridFsFileId =
-        await upload.text();
+    try {
+        const formData = new FormData();
 
-    await fetch(
-        `${API}/${processoId}/documentos`,
-        {
+        formData.append("file", arquivo);
 
+        const upload = await fetch(UPLOAD_URL, {
             method: "POST",
+            body: formData
+        });
 
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-
-                id: crypto.randomUUID(),
-
-                nomeArquivo: arquivo.name,
-
-                tipo: arquivo.type,
-
-                versaoAtual: 1,
-
-                ativo: true,
-
-                versoes: [
-
-                    {
-
-                        versao: 1,
-
-                        gridFsFileId,
-
-                        autor,
-
-                        observacao:
-                            "Versão inicial",
-
-                        dataUpload:
-                            new Date()
-
-                    }
-
-                ]
-            })
+        if (!upload.ok) {
+            const errorText = await upload.text();
+            alert(`Erro ao fazer upload: ${errorText}`);
+            return;
         }
-    );
 
-    carregarProcessos();
+        const fileId = await upload.text();
+
+        const salvarDocumento = await fetch(
+            `${API}/${processoId}/documentos`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    nomeArquivo: arquivo.name,
+                    tipo: arquivo.type,
+                    versaoAtual: 1,
+                    ativo: true,
+                    versoes: [
+                        {
+                            versao: 1,
+                            gridFsFileId: fileId,
+                            autor: autor,
+                            observacao: "Versão inicial",
+                            dataUpload: new Date()
+                        }
+                    ]
+                })
+            }
+        );
+
+        if (!salvarDocumento.ok) {
+            const errorText = await salvarDocumento.text();
+            alert(`Erro ao salvar documento: ${errorText}`);
+            return;
+        }
+
+        listarProcessos();
+    } catch (error) {
+        console.error("uploadDocumento error:", error);
+        alert(
+            `Erro ao enviar documento: ${error.message || error}`
+        );
+    }
 }
 
-async function novaVersao(
-    processoId,
-    documentoId
-) {
-
-    const arquivo =
-        document.getElementById(
-            `nova-versao-${documentoId}`
-        ).files[0];
-
-    const autor =
-        document.getElementById(
-            `autor-versao-${documentoId}`
-        ).value;
-
-    if (!arquivo) return;
-
-    const formData = new FormData();
-
-    formData.append("arquivo", arquivo);
-
-    const upload = await fetch("/arquivos/upload", {
-
-        method: "POST",
-
-        body: formData
-    });
-
-    const gridFsFileId =
-        await upload.text();
-
-    await fetch(
-
-        `${API}/${processoId}/documentos/${documentoId}/nova-versao?gridFsFileId=${gridFsFileId}&autor=${autor}`,
-
-        {
-
-            method: "POST"
-        }
+async function uploadNovaVersao(processoId, documentoId) {
+    const arquivoInput = document.getElementById(
+        `novoArquivo-versao-${processoId}-${documentoId}`
     );
 
-    carregarProcessos();
+    const autorInput = document.getElementById(
+        `autor-versao-${processoId}-${documentoId}`
+    );
+
+    if (!arquivoInput || !autorInput) {
+        alert(
+            "Erro interno: os campos de nova versão não foram encontrados. Recarregue a página e tente novamente."
+        );
+        console.error(
+            "uploadNovaVersao element missing",
+            { processoId, documentoId, arquivoInput, autorInput }
+        );
+        return;
+    }
+
+    const arquivo = arquivoInput.files[0];
+    const autor = autorInput.value;
+
+    if (!arquivo) {
+        alert("Selecione um arquivo");
+        return;
+    }
+
+    if (!autor) {
+        alert("Digite o nome do advogado");
+        return;
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append("file", arquivo);
+
+        const upload = await fetch(UPLOAD_URL, {
+            method: "POST",
+            body: formData
+        });
+
+        if (!upload.ok) {
+            const errorText = await upload.text();
+            alert(`Erro ao fazer upload: ${errorText}`);
+            return;
+        }
+
+        const fileId = await upload.text();
+
+        const salvarVersao = await fetch(
+            `${API}/${processoId}/documentos/${documentoId}/nova-versao`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    gridFsFileId: fileId,
+                    autor: autor
+                })
+            }
+        );
+
+        if (!salvarVersao.ok) {
+            const errorText = await salvarVersao.text();
+            alert(`Erro ao salvar nova versão: ${errorText}`);
+            return;
+        }
+
+        listarProcessos();
+    } catch (error) {
+        console.error("uploadNovaVersao error:", error);
+        alert(
+            `Erro ao enviar nova versão: ${error.message || error}`
+        );
+    }
 }
 
-carregarProcessos();
+listarProcessos();

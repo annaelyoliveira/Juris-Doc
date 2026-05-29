@@ -10,7 +10,7 @@
             content="width=device-width, initial-scale=1.0"
     >
 
-    <title>JurisDoc</title>
+    <title>JurisDoc - Processos</title>
 
     <link rel="stylesheet" href="style.css">
 
@@ -30,7 +30,9 @@
 
         </div>
 
-        <!-- perfil removido na landing -->
+        <div class="profile">
+            <a class="btn small" href="index.html">Voltar</a>
+        </div>
 
     </header>
 
@@ -42,6 +44,7 @@
                 Sistema Jurídico Inteligente
             </h1>
 
+            <!-- subtítulo removido conforme solicitado -->
 
         </div>
 
@@ -61,12 +64,39 @@
 
     </section>
 
-    <section class="card landing-actions">
-        <div class="landing-buttons">
-            <a class="btn large" href="processos.html">Criar e Visualizar Processos</a>
-            <div style="width:24px"></div>
-            <a class="btn large" href="search.html">Pesquisar Processo</a>
+    <section class="create-process card">
+
+        <h2>Novo Processo</h2>
+
+        <div class="form-grid">
+
+            <input
+                    type="text"
+                    id="numeroProcesso"
+                    placeholder="Número do processo"
+            >
+
+            <input
+                    type="text"
+                    id="cliente"
+                    placeholder="Cliente"
+            >
+
         </div>
+
+        <textarea
+                id="descricao"
+                placeholder="Descrição do processo"
+        ></textarea>
+
+        <button type="button" onclick="criarProcesso()">
+            Criar Processo
+        </button>
+
+    </section>
+
+    <section id="processos">
+
     </section>
 
 </div>

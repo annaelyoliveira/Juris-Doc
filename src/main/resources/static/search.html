@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesquisar Processo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<div class="container">
+    <header class="topbar">
+        <div class="logo">⚖️ JurisDoc</div>
+        <div class="profile">
+            <a class="btn small" href="index.html">Voltar</a>
+        </div>
+    </header>
+
+    <section class="card search-card">
+        <h2>Pesquisar Processo</h2>
+        <input type="text" id="q" placeholder="Número do processo ou cliente">
+        <button type="button" id="btnSearch">Pesquisar</button>
+    </section>
+
+    <section id="result" class="card results-card">
+        <div class="empty-state">Digite e pesquise um processo.</div>
+    </section>
+</div>
+
+<script>
+const API = '/processos';
+
+async function search() {
+    const q = document.getElementById('q').value.trim().toLowerCase();
+    const res = await fetch(API);
+    const processos = await res.json();
+    const matches = processos.filter(p =>
+        p.numeroProcesso.toLowerCase().includes(q) ||
+        (p.cliente && p.cliente.toLowerCase().includes(q))
+    );
+
+    const div = document.getElementById('result');
+    if (matches.length === 0) {
+        div.innerHTML = '<div class="empty-state">Nenhum processo encontrado.</div>';
+        return;
+    }
+
+    div.innerHTML = matches.map(p => `
+        <div class="process-card">
+            <div class="process-title">⚖️ ${p.numeroProcesso}</div>
+            <div class="process-info">Cliente: ${p.cliente}</div>
+            <div class="process-info">Descrição: ${p.descricao}</div>
+            <div class="document-section">
+                <h4>Documentos</h4>
+                ${p.documentos && p.documentos.length > 0 ? p.documentos.map(d => `
+                    <div class="document-card">
+                        <h4>📄 ${d.nomeArquivo}</h4>
+                        <div class="document-meta">Versão atual: ${d.versaoAtual}</div>
+                        <div class="version-list">
+                            ${d.versoes ? d.versoes.map(v => `
+                                <div class="version-item">
+                                    <span>Versão ${v.versao}</span>
+                                    <a href="/arquivos/${v.gridFsFileId}" target="_blank">Baixar</a>
+                                </div>
+                            `).join('') : ''}
+                        </div>
+                    </div>
+                `).join('') : '<div class="no-documents">Nenhum documento.</div>'}
+            </div>
+        </div>
+    `).join('');
+}
+
+document.getElementById('btnSearch').addEventListener('click', search);
+</script>
+
+</body>
+</html>

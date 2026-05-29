@@ -1,5 +1,6 @@
 package jurisdoc.controller;
 
+import jurisdoc.dto.NovaVersaoRequest;
 import jurisdoc.model.DocumentoJuridico;
 import jurisdoc.model.Processo;
 import jurisdoc.service.ProcessoService;
@@ -112,9 +113,7 @@ public class ProcessoController {
 
             @PathVariable String documentoId,
 
-            @RequestParam String gridFsFileId,
-
-            @RequestParam String autor
+            @RequestBody NovaVersaoRequest request
 
     ) {
 
@@ -124,8 +123,8 @@ public class ProcessoController {
 
                         processoId,
                         documentoId,
-                        gridFsFileId,
-                        autor
+                        request.getGridFsFileId(),
+                        request.getAutor()
                 )
         );
     }
