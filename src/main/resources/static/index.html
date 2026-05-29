@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>JurisDoc</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<div class="background-glow"></div>
+
+<div class="container">
+
+    <header class="topbar">
+
+        <h1>⚖️ JurisDoc</h1>
+
+    </header>
+
+    <section class="hero">
+
+        <div class="hero-left">
+
+            <h2>
+                Sistema Jurídico Inteligente
+            </h2>
+
+        </div>
+
+        <div class="hero-right">
+
+            <span>Total de Processos</span>
+
+            <h3 id="totalProcessos">0</h3>
+
+        </div>
+
+    </section>
+
+    <section class="form-card">
+
+        <h3>Novo Processo</h3>
+
+        <input
+                type="text"
+                id="numeroProcesso"
+                placeholder="Número do processo"
+        >
+
+        <input
+                type="text"
+                id="cliente"
+                placeholder="Cliente"
+        >
+
+        <textarea
+                id="descricao"
+                placeholder="Descrição"
+        ></textarea>
+
+        <button onclick="criarProcesso()">
+            Criar Processo
+        </button>
+
+    </section>
+
+    <div id="listaProcessos"></div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+
+</html>
